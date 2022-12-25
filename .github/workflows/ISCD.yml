@@ -1,14 +1,19 @@
 on:
   push:
-    branches: [ main ]
+    branches: [main]
   schedule:
-    - cron: '0 18 * * 6'
+    - cron: "0 18 * * 6"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
 
 name: Pull-Content-and-build-book
 jobs:
   build:
     runs-on: ubuntu-latest
-    steps: 
+    steps:
       - name: Checkout the repo
         uses: actions/checkout@v3
         with:
@@ -16,7 +21,7 @@ jobs:
           ssh-key: ${{ secrets.PULL_KEY }}
           ref: main
           fetch-depth: 0
-          
+
       - name: Setup R
         uses: r-lib/actions/setup-r@v2
 
@@ -50,11 +55,18 @@ jobs:
       - name: Build book
         run: Rscript -e 'bookdown::render_book("index.Rmd", quiet = TRUE)'
 
-      - name: Deploy to github-pages
-        uses: JamesIves/github-pages-deploy-action@v4.4.1
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v1
         with:
-          ssh-key: ${{ secrets.BUILD_KEY }}
-          branch: gh-pages
-          folder: _book
+          path: ./_book
 
-        
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v1
