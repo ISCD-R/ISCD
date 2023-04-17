@@ -53,7 +53,9 @@ jobs:
           restore-keys: bookdown-2-
 
       - name: Build book
-        run: Rscript -e 'bookdown::render_book("index.Rmd", quiet = TRUE)'
+        run: |
+          Rscript -e 'bookdown::render_book("index.Rmd", quiet = TRUE)'
+          cp -r assets/images/chImages/ _book/assets/images/chImages/
 
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v1
